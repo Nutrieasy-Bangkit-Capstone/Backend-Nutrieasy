@@ -9,3 +9,10 @@ Content-Type: application/json
   "password": "admin"
 }
 
+###
+POST http://localhost:8080/scan
+Content-Type: application/json
+
+{
+  "query": "durian"
+}
