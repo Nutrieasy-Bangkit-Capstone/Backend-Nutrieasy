@@ -4,7 +4,6 @@ import nutrieasy.backend.entity.Nutrients;
 import nutrieasy.backend.model.nutritionix.NutritionixRequestVo;
 import nutrieasy.backend.model.nutritionix.response.NutritionixResponseVo;
 import nutrieasy.backend.repository.NutrientsRepository;
-import nutrieasy.backend.service.NutritionixService;
 import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -22,7 +21,7 @@ import java.util.List;
  * Created in IntelliJ IDEA.
  */
 @Service
-public class NutritionixServiceImpl implements NutritionixService {
+public class NutritionixServiceImpl {
     private final RestTemplate restTemplate;
     private final NutrientsRepository nutrientsRepository;
 
@@ -38,7 +37,6 @@ public class NutritionixServiceImpl implements NutritionixService {
         this.nutrientsRepository = nutrientsRepository;
     }
 
-    @Override
     public NutritionixResponseVo getNutritionixData(NutritionixRequestVo query) {
         System.out.println("Sending query to Nutritionix API : " + query.toString());
         HttpHeaders headers = new HttpHeaders();
