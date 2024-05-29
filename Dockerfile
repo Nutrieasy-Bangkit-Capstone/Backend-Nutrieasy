@@ -10,6 +10,9 @@ COPY pom.xml ./
 COPY src ./src
 
 # Download dependencies and build a release artifact.
+
+# Download dependencies and build a release artifact.
+RUN mvn clean install -DskipTests
 RUN mvn package -DskipTests
 
 # Use OpenJDK for base image.
