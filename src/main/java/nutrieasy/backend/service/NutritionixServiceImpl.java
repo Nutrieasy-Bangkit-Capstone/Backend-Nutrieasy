@@ -1,4 +1,4 @@
-package nutrieasy.backend.service.impl;
+package nutrieasy.backend.service;
 
 import nutrieasy.backend.entity.Nutrients;
 import nutrieasy.backend.model.nutritionix.NutritionixRequestVo;

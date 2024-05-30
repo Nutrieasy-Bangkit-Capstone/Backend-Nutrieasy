@@ -4,12 +4,13 @@ import lombok.Data;
 
 /**
  * Created by Resa S.
- * Date: 08-05-2024
+ * Date: 29-05-2024
  * Created in IntelliJ IDEA.
  */
-
 @Data
-public class LoginRequestVO {
+public class RegisterRequestVo {
     private String email;
     private String password;
+    private String fullName;
+    private String phoneNumber;
 }
