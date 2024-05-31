@@ -21,7 +21,7 @@ import java.util.List;
  * Created in IntelliJ IDEA.
  */
 @Service
-public class NutritionixServiceImpl {
+public class NutritionixService {
     private final RestTemplate restTemplate;
     private final NutrientsRepository nutrientsRepository;
 
@@ -32,7 +32,7 @@ public class NutritionixServiceImpl {
     @Value("${nutritionix.app.key}")
     private String APP_KEY;
 
-    public NutritionixServiceImpl(RestTemplate restTemplate, NutrientsRepository nutrientsRepository) {
+    public NutritionixService(RestTemplate restTemplate, NutrientsRepository nutrientsRepository) {
         this.restTemplate = restTemplate;
         this.nutrientsRepository = nutrientsRepository;
     }

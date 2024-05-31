@@ -15,29 +15,30 @@ import java.util.Set;
 @Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(unique = true)
-    private String email;
-
-    @Column(nullable = false)
-    private String password;
+    @Column(name = "uid")
+    private String uid;
 
     @Column(name = "full_name")
     private String fullName;
 
-    @Column(name = "phone_number")
-    private String phoneNumber;
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "password")
+    private String password;
+
+    @Column(name = "date_of_birth")
+    private String dateOfBirth;
+
+    @Column(name = "gender")
+    private String gender;
+
+    @Column(name = "height")
+    private int height;
+
+    @Column(name = "weight")
+    private int weight;
 
     @Column(name = "role")
     private String role;
-
-//    @ManyToMany(fetch = FetchType.EAGER)
-//    @JoinTable(
-//            name = "user_roles",
-//            joinColumns = @JoinColumn(name = "user_id"),
-//            inverseJoinColumns = @JoinColumn(name = "role_id")
-//    )
-//    private Set<Role> roles;
 }
