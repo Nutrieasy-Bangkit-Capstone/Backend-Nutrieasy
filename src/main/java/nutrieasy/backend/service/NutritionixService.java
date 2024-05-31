@@ -1,6 +1,7 @@
 package nutrieasy.backend.service;
 
 import nutrieasy.backend.entity.Nutrients;
+import nutrieasy.backend.model.NutrientsDetail;
 import nutrieasy.backend.model.nutritionix.NutritionixRequestVo;
 import nutrieasy.backend.model.nutritionix.response.NutritionixResponseVo;
 import nutrieasy.backend.repository.NutrientsRepository;
@@ -37,15 +38,13 @@ public class NutritionixService {
         this.nutrientsRepository = nutrientsRepository;
     }
 
-    public NutritionixResponseVo getNutritionixData(NutritionixRequestVo query) {
+    public NutritionixResponseVo getNutritionixData(NutritionixRequestVo query) throws RestClientException {
         System.out.println("Sending query to Nutritionix API : " + query.toString());
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", ContentType.APPLICATION_JSON.getMimeType());
         headers.set("x-app-id", APP_ID);
         headers.set("x-app-key", APP_KEY);
 
-
-        // Create HttpEntity
         HttpEntity<NutritionixRequestVo> requestEntity = new HttpEntity<>(query, headers);
 
         try {
@@ -59,14 +58,21 @@ public class NutritionixService {
                 System.out.println("Food : " + food.toString());
                 food.getFull_nutrients().forEach(fullNutrient -> nutrients.add(fullNutrient.getAttr_id()));
             });
-            //System.out.println("Nutrients : " + nutrients);
+
             List<Nutrients> nutrientsList = nutrientsRepository.findAllById(nutrients);
-            System.out.println("Nutrients : " + nutrientsList.toString());
             return response;
         } catch (RestClientException e) {
             e.printStackTrace();
+            throw new RestClientException("Error while sending request to Nutritionix API");
         }
-        return null;
 
+    }
+
+    public NutrientsDetail getNutrientAttribute(int attrId) {
+        Nutrients nutrient = nutrientsRepository.findById(attrId).orElse(null);
+        if (nutrient == null) {
+            return null;
+        }
+        return new NutrientsDetail(nutrient.getAttrID(), nutrient.getName(), 0.0, nutrient.getUnit());
     }
 }

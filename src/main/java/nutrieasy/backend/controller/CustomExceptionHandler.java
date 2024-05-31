@@ -33,5 +33,7 @@ public class CustomExceptionHandler {
     public final ResponseEntity<String> handleException(Exception ex, WebRequest request) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+
 }
 
