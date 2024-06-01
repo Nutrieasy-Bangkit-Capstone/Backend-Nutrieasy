@@ -2,7 +2,7 @@ package nutrieasy.backend.service;
 
 import nutrieasy.backend.entity.User;
 import nutrieasy.backend.model.vo.UpdateUserRequestVo;
-import nutrieasy.backend.model.vo.UpdateUserResponseVo;
+import nutrieasy.backend.model.vo.UserResponseVo;
 import nutrieasy.backend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,11 +23,11 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UpdateUserResponseVo updateUser(UpdateUserRequestVo updateUserRequestVo) {
+    public UserResponseVo updateUser(UpdateUserRequestVo updateUserRequestVo) {
 
         User userFromDb = userRepository.findByEmail(updateUserRequestVo.getEmail());
         if (userFromDb == null) {
-            return new UpdateUserResponseVo(false, "User not found", null);
+            return new UserResponseVo(false, "User not found", null);
         }
 
         userFromDb.setFullName(updateUserRequestVo.getFullName());
@@ -38,7 +38,16 @@ public class UserService {
         userFromDb.setHeight(updateUserRequestVo.getHeight());
 
         userRepository.save(userFromDb);
-        return new UpdateUserResponseVo(true, "User updated successfully", userFromDb);
+        return new UserResponseVo(true, "User updated successfully", userFromDb);
+    }
+
+
+    public UserResponseVo getUserByUid(String uid) {
+        User user = userRepository.findByUid(uid);
+        if (user == null) {
+            return new UserResponseVo(false, "User not found", null);
+        }
+        return new UserResponseVo(true, "User found", user);
     }
 
 }

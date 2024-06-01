@@ -11,7 +11,7 @@ import nutrieasy.backend.entity.User;
  */
 @Data
 @AllArgsConstructor
-public class UpdateUserResponseVo {
+public class UserResponseVo {
     private Boolean success;
     private String message;
     private User user;
