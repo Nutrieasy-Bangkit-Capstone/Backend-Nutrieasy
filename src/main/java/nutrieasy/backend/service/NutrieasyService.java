@@ -50,14 +50,10 @@ public class NutrieasyService {
             return new ScanResponseVo(false, "Error uploading image", null);
         }
 
-        // TODO: 0 Upload and Scan the image to Machine Learning model
-
         System.out.println("Uploaded Image URL : " + uploadedImageUrl);
 
-        // TODO: 1. Check if the food is already in the database
         Food food = foodRepository.findByName(scanModelResult);
 
-        // TODO: 2. If not, send the request to Nutritionix API
         if (food == null) {
             NutritionixRequestVo nutritionixRequestVo = new NutritionixRequestVo(scanModelResult);
             NutritionixResponseVo nutritionixResponseVo = nutritionixService.getNutritionixData(nutritionixRequestVo);
