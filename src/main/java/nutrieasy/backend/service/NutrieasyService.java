@@ -12,6 +12,7 @@ import nutrieasy.backend.utils.JsonUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -29,18 +30,27 @@ public class NutrieasyService {
 
     private final FoodRepository foodRepository;
     private final NutritionixService nutritionixService;
+    private final GoogleCloudStorageService googleCloudStorageService;
 
-    public NutrieasyService(FoodRepository foodRepository, NutritionixService nutritionixService) {
+    public NutrieasyService(FoodRepository foodRepository, NutritionixService nutritionixService, GoogleCloudStorageService googleCloudStorageService) {
         this.foodRepository = foodRepository;
         this.nutritionixService = nutritionixService;
+        this.googleCloudStorageService = googleCloudStorageService;
     }
 
     public ScanResponseVo scan(String uid, MultipartFile img) {
         ScanResponseVo scanResponseVo = new ScanResponseVo();
         FoodDetails foodDetails = new FoodDetails();
         String scanModelResult = "durian";
+        String uploadedImageUrl = null;
+        try {
+            uploadedImageUrl = uploadToBucket(img, uid);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ScanResponseVo(false, "Error uploading image", null);
+        }
+
         // TODO: 0 Upload and Scan the image to Machine Learning model
-        String uploadedImageUrl = uploadToBucket(img);
 
         System.out.println("Uploaded Image URL : " + uploadedImageUrl);
 
@@ -115,7 +125,7 @@ public class NutrieasyService {
         return foodDetails;
     }
 
-    private String uploadToBucket(MultipartFile img) {
-        return "https://storage.googleapis.com/nutrieasy/" + img.getOriginalFilename();
+    private String uploadToBucket(MultipartFile img, String uid) throws IOException {
+        return  googleCloudStorageService.uploadFile(img, uid);
     }
 }
