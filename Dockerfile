@@ -19,6 +19,8 @@ RUN mvn package -DskipTests
 # https://hub.docker.com/_/openjdk
 # https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-builds
 FROM openjdk:11.0.16-jre-slim
+# Add a volume pointing to /tmp
+VOLUME /tmp
 
 # Copy the jar to the production image from the builder stage.
 COPY --from=build-env /app/target/nutrieasy-backend-service-*.jar /nutrieasy-backend-service.jar
