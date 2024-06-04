@@ -1,8 +1,6 @@
 package nutrieasy.backend.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -12,32 +10,26 @@ import java.sql.Timestamp;
  * Date: 04-06-2024
  * Created in IntelliJ IDEA.
  */
-
 @Entity
-@Table(name = "user_meals_history")
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class UserMealHistory {
-
-
+public class UserHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "food_id", insertable = false, updatable = false)
+    @JoinColumn(name = "food_id")
     private Food food;
 
-    @Lob
-    @Column(name = "image_url", columnDefinition = "CLOB")
+    @Column(name = "image_url")
     private String imageUrl;
 
     @Column(name = "created_at", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private Timestamp createdAt;
+
 }

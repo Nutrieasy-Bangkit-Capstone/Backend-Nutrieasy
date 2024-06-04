@@ -3,18 +3,17 @@ package nutrieasy.backend.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import nutrieasy.backend.entity.Food;
 import nutrieasy.backend.entity.User;
-import nutrieasy.backend.entity.UserMealHistory;
+import nutrieasy.backend.entity.UserHistory;
 import nutrieasy.backend.model.FoodDetails;
 import nutrieasy.backend.model.NutrientsDetail;
 import nutrieasy.backend.model.nutritionix.NutritionixRequestVo;
 import nutrieasy.backend.model.nutritionix.response.NutritionixResponseVo;
 import nutrieasy.backend.model.vo.ScanResponseVo;
 import nutrieasy.backend.repository.FoodRepository;
-import nutrieasy.backend.repository.UserMealHistoryRepository;
+import nutrieasy.backend.repository.UserHistoryRepository;
 import nutrieasy.backend.repository.UserRepository;
 import nutrieasy.backend.utils.JsonUtil;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Base64Utils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -35,14 +34,16 @@ public class NutrieasyService {
 
     private final FoodRepository foodRepository;
     private final NutritionixService nutritionixService;
-    private final UserMealHistoryRepository userMealHistoryRepository;
+    private final UserHistoryRepository userHistoryRepository;
     private final UserRepository userRepository;
+    private final GoogleCloudStorageService googleCloudStorageService;
 
-    public NutrieasyService(FoodRepository foodRepository, NutritionixService nutritionixService, UserMealHistoryRepository userMealHistoryRepository, UserRepository userRepository) {
+    public NutrieasyService(FoodRepository foodRepository, NutritionixService nutritionixService, UserHistoryRepository userHistoryRepository, UserRepository userRepository, GoogleCloudStorageService googleCloudStorageService) {
         this.foodRepository = foodRepository;
         this.nutritionixService = nutritionixService;
-        this.userMealHistoryRepository = userMealHistoryRepository;
+        this.userHistoryRepository = userHistoryRepository;
         this.userRepository = userRepository;
+        this.googleCloudStorageService = googleCloudStorageService;
     }
 
     public ScanResponseVo scan(String uid, MultipartFile img) {
@@ -52,7 +53,7 @@ public class NutrieasyService {
         String uploadedImageUrl = null;
 
         try {
-            uploadedImageUrl = convertImage(img);
+            uploadedImageUrl = googleCloudStorageService.uploadFile(img, uid);
         } catch (IOException e) {
             e.printStackTrace();
             return new ScanResponseVo(false, "Error uploading image", null);
@@ -128,20 +129,14 @@ public class NutrieasyService {
         return foodDetails;
     }
 
-    private String convertImage(MultipartFile img) throws IOException {
-        String base64Image = "";
-        byte[] imageBytes = img.getBytes();
-        base64Image = Base64Utils.encodeToString(imageBytes);
-        return base64Image;
-    }
 
     private void saveScanHistory(Food food, User user,String img) {
-        UserMealHistory userMealHistory = new UserMealHistory();
-        userMealHistory.setUser(user);
-        userMealHistory.setFood(food);
-        userMealHistory.setImageUrl(img);
-        userMealHistory.setCreatedAt(Timestamp.from(java.time.Instant.now()));
+        UserHistory userHistory = new UserHistory();
+        userHistory.setUser(user);
+        userHistory.setFood(food);
+        userHistory.setImageUrl(img);
+        userHistory.setCreatedAt(Timestamp.from(java.time.Instant.now()));
 
-        userMealHistoryRepository.save(userMealHistory);
+        userHistoryRepository.save(userHistory);
     }
 }
