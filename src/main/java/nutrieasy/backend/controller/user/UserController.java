@@ -1,7 +1,9 @@
 package nutrieasy.backend.controller.user;
 
 import nutrieasy.backend.model.vo.UpdateUserRequestVo;
+import nutrieasy.backend.model.vo.UserHistoryResponseVo;
 import nutrieasy.backend.model.vo.UserResponseVo;
+import nutrieasy.backend.service.UserHistoryService;
 import nutrieasy.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,8 +17,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    private final UserHistoryService userHistoryService;
+
+    public UserController(UserService userService, UserHistoryService userHistoryService) {
         this.userService = userService;
+        this.userHistoryService = userHistoryService;
     }
 
     @GetMapping("/user")
@@ -31,6 +36,14 @@ public class UserController {
     @PutMapping("/user/updateProfile")
     public ResponseEntity<UserResponseVo> updateUser(@RequestBody UpdateUserRequestVo updateUserRequestVo) {
         return ResponseEntity.ok(userService.updateUser(updateUserRequestVo));
+    }
+
+    @GetMapping("/user/history")
+    public ResponseEntity<UserHistoryResponseVo> getUserHistory(
+            @RequestParam(value = "uid", required = true) String uid,
+            @RequestParam(value = "date", required = false) String date) {
+        UserHistoryResponseVo userHistoryResponseVo = userHistoryService.getUserHistory(uid, date);
+        return ResponseEntity.ok(userHistoryResponseVo);
     }
 
 }

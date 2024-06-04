@@ -32,4 +32,5 @@ public class UserHistory {
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private Timestamp createdAt;
 
+
 }

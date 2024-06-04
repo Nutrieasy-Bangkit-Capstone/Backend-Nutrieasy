@@ -49,7 +49,7 @@ public class NutrieasyService {
     public ScanResponseVo scan(String uid, MultipartFile img) {
         ScanResponseVo scanResponseVo = new ScanResponseVo();
         FoodDetails foodDetails = new FoodDetails();
-        String scanModelResult = "durian";
+        String scanModelResult = "orange";
         String uploadedImageUrl = null;
 
         try {
