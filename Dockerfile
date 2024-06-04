@@ -25,5 +25,7 @@ VOLUME /tmp
 # Copy the jar to the production image from the builder stage.
 COPY --from=build-env /app/target/nutrieasy-backend-service-*.jar /nutrieasy-backend-service.jar
 
+
+COPY src/main/resources/service-account.json /app/service-account.json
 # Run the web service on container startup.
-CMD ["java", "-jar", "/nutrieasy-backend-service.jar"]
+CMD ["java","-Djava.security.egd=file:/dev/./urandom", "-jar", "/nutrieasy-backend-service.jar"]

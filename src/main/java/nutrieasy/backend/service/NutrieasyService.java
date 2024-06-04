@@ -2,16 +2,22 @@ package nutrieasy.backend.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import nutrieasy.backend.entity.Food;
+import nutrieasy.backend.entity.User;
+import nutrieasy.backend.entity.UserMealHistory;
 import nutrieasy.backend.model.FoodDetails;
 import nutrieasy.backend.model.NutrientsDetail;
 import nutrieasy.backend.model.nutritionix.NutritionixRequestVo;
 import nutrieasy.backend.model.nutritionix.response.NutritionixResponseVo;
 import nutrieasy.backend.model.vo.ScanResponseVo;
 import nutrieasy.backend.repository.FoodRepository;
+import nutrieasy.backend.repository.UserMealHistoryRepository;
+import nutrieasy.backend.repository.UserRepository;
 import nutrieasy.backend.utils.JsonUtil;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Base64Utils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -29,25 +35,31 @@ public class NutrieasyService {
 
     private final FoodRepository foodRepository;
     private final NutritionixService nutritionixService;
+    private final UserMealHistoryRepository userMealHistoryRepository;
+    private final UserRepository userRepository;
 
-    public NutrieasyService(FoodRepository foodRepository, NutritionixService nutritionixService) {
+    public NutrieasyService(FoodRepository foodRepository, NutritionixService nutritionixService, UserMealHistoryRepository userMealHistoryRepository, UserRepository userRepository) {
         this.foodRepository = foodRepository;
         this.nutritionixService = nutritionixService;
+        this.userMealHistoryRepository = userMealHistoryRepository;
+        this.userRepository = userRepository;
     }
 
     public ScanResponseVo scan(String uid, MultipartFile img) {
         ScanResponseVo scanResponseVo = new ScanResponseVo();
         FoodDetails foodDetails = new FoodDetails();
         String scanModelResult = "durian";
-        // TODO: 0 Upload and Scan the image to Machine Learning model
-        String uploadedImageUrl = uploadToBucket(img);
+        String uploadedImageUrl = null;
 
-        System.out.println("Uploaded Image URL : " + uploadedImageUrl);
+        try {
+            uploadedImageUrl = convertImage(img);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ScanResponseVo(false, "Error uploading image", null);
+        }
 
-        // TODO: 1. Check if the food is already in the database
         Food food = foodRepository.findByName(scanModelResult);
 
-        // TODO: 2. If not, send the request to Nutritionix API
         if (food == null) {
             NutritionixRequestVo nutritionixRequestVo = new NutritionixRequestVo(scanModelResult);
             NutritionixResponseVo nutritionixResponseVo = nutritionixService.getNutritionixData(nutritionixRequestVo);
@@ -55,7 +67,6 @@ public class NutrieasyService {
             if (nutritionixResponseVo == null) {
                 return new ScanResponseVo(false, "Nutritionix API error", null);
             } else {
-                // TODO: 2.1 Save the food details to database
                 foodDetails = convertNutritionixResponse(nutritionixResponseVo);
                 food = new Food();
                 food.setName(scanModelResult);
@@ -76,7 +87,9 @@ public class NutrieasyService {
             foodDetails.setNutrientsDetailList(JsonUtil.convertJsonToList(food.getNutrientsJson(),  new TypeReference<List<NutrientsDetail>>() {}));
         }
 
-        // TODO: 3. Save the scan history
+        User user = userRepository.findByUid(uid);
+        saveScanHistory(food, user, uploadedImageUrl);
+
 
 
         foodDetails.setImageUrl(uploadedImageUrl);
@@ -115,7 +128,20 @@ public class NutrieasyService {
         return foodDetails;
     }
 
-    private String uploadToBucket(MultipartFile img) {
-        return "https://storage.googleapis.com/nutrieasy/" + img.getOriginalFilename();
+    private String convertImage(MultipartFile img) throws IOException {
+        String base64Image = "";
+        byte[] imageBytes = img.getBytes();
+        base64Image = Base64Utils.encodeToString(imageBytes);
+        return base64Image;
+    }
+
+    private void saveScanHistory(Food food, User user,String img) {
+        UserMealHistory userMealHistory = new UserMealHistory();
+        userMealHistory.setUser(user);
+        userMealHistory.setFood(food);
+        userMealHistory.setImageUrl(img);
+        userMealHistory.setCreatedAt(Timestamp.from(java.time.Instant.now()));
+
+        userMealHistoryRepository.save(userMealHistory);
     }
 }
