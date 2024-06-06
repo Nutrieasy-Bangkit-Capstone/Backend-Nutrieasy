@@ -1,12 +1,17 @@
 package nutrieasy.backend.controller.scan;
 
+import nutrieasy.backend.model.vo.IntakeResponseVo;
+import nutrieasy.backend.model.vo.ScanHistoryResponseVo;
 import nutrieasy.backend.model.vo.ScanResponseVo;
 import nutrieasy.backend.service.NutrieasyService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.text.ParseException;
 
 /**
  * Created by Resa S.
@@ -31,8 +36,8 @@ public class NutrieasyController {
         return ResponseEntity.ok(nutrieasyService.scan(uid, img));
     }
 
-//    @GetMapping("/scan/history")
-//    public ResponseEntity<ScanHistoryResponseVo> getScanHistory(@RequestParam(value = "uid", required = true) String uid) {
-//        return ResponseEntity.ok(nutritionixService.getScanHistory());
-//    }
+    @GetMapping("/intake")
+    public ResponseEntity<IntakeResponseVo> getScanHistory(@RequestParam(value = "uid") String uid) throws ParseException {
+        return ResponseEntity.ok(nutrieasyService.calculateIntake(uid));
+    }
 }

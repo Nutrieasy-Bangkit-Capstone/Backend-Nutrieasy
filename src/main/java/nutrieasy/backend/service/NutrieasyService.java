@@ -8,18 +8,25 @@ import nutrieasy.backend.model.FoodDetails;
 import nutrieasy.backend.model.NutrientsDetail;
 import nutrieasy.backend.model.nutritionix.NutritionixRequestVo;
 import nutrieasy.backend.model.nutritionix.response.NutritionixResponseVo;
+import nutrieasy.backend.model.vo.IntakeResponseVo;
 import nutrieasy.backend.model.vo.ScanResponseVo;
 import nutrieasy.backend.repository.FoodRepository;
 import nutrieasy.backend.repository.UserHistoryRepository;
 import nutrieasy.backend.repository.UserRepository;
+import nutrieasy.backend.utils.ConstantNutrient;
 import nutrieasy.backend.utils.JsonUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -85,12 +92,12 @@ public class NutrieasyService {
             foodDetails.setServingWeightGrams(food.getServingWeightGrams());
             foodDetails.setServingQty(food.getServingQty());
             foodDetails.setServingUnit(food.getServingUnit());
-            foodDetails.setNutrientsDetailList(JsonUtil.convertJsonToList(food.getNutrientsJson(),  new TypeReference<List<NutrientsDetail>>() {}));
+            foodDetails.setNutrientsDetailList(JsonUtil.convertJsonToList(food.getNutrientsJson(), new TypeReference<List<NutrientsDetail>>() {
+            }));
         }
 
         User user = userRepository.findByUid(uid);
         saveScanHistory(food, user, uploadedImageUrl);
-
 
 
         foodDetails.setImageUrl(uploadedImageUrl);
@@ -130,7 +137,7 @@ public class NutrieasyService {
     }
 
 
-    private void saveScanHistory(Food food, User user,String img) {
+    private void saveScanHistory(Food food, User user, String img) {
         UserHistory userHistory = new UserHistory();
         userHistory.setUser(user);
         userHistory.setFood(food);
@@ -138,5 +145,43 @@ public class NutrieasyService {
         userHistory.setCreatedAt(Timestamp.from(java.time.Instant.now()));
 
         userHistoryRepository.save(userHistory);
+    }
+
+    public IntakeResponseVo calculateIntake(String uid) throws ParseException {
+        User user = userRepository.findByUid(uid);
+
+        if (user == null) {
+            return new IntakeResponseVo(false, "User not found", null);
+        }
+
+        String date = "2024-06-04";
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        Date d = formatter.parse(date);
+
+        List<UserHistory> userHistoryList = userHistoryRepository.findAllByUserAndDate(user, d);
+        System.out.println(userHistoryList);
+
+        List<FoodDetails> foodDetailsList = new ArrayList<>();
+        userHistoryList.forEach(userHistory -> {
+            FoodDetails foodDetails = new FoodDetails();
+            foodDetails.setNutrientsDetailList(
+                    JsonUtil.convertJsonToList(userHistory.getFood().getNutrientsJson(),
+                            new TypeReference<List<NutrientsDetail>>() {
+                            }));
+            foodDetailsList.add(foodDetails);
+        });
+
+        List<NutrientsDetail> nutrientsDetailList = new ArrayList<>();
+        foodDetailsList.forEach(foodDetails -> nutrientsDetailList.addAll(foodDetails.getNutrientsDetailList()));
+
+        System.out.println(nutrientsDetailList);
+        nutrientsDetailList.stream().forEach(nutrientsDetail -> {
+            if (nutrientsDetail.getAttrId() == ConstantNutrient.VITAMIN_C) {
+                System.out.println("Vitamin C : " + nutrientsDetail.getValue() + " " + nutrientsDetail.getUnit());
+            }
+        });
+
+
+        return null;
     }
 }

@@ -8,6 +8,8 @@ import nutrieasy.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
+
 /**
  * Created by Resa S.
  * Date: 30-05-2024
@@ -40,8 +42,8 @@ public class UserController {
 
     @GetMapping("/user/history")
     public ResponseEntity<UserHistoryResponseVo> getUserHistory(
-            @RequestParam(value = "uid", required = true) String uid,
-            @RequestParam(value = "date", required = false) String date) {
+            @RequestParam(value = "uid") String uid,
+            @RequestParam(value = "date", required = false) String date) throws ParseException {
         UserHistoryResponseVo userHistoryResponseVo = userHistoryService.getUserHistory(uid, date);
         return ResponseEntity.ok(userHistoryResponseVo);
     }

@@ -4,7 +4,9 @@ import nutrieasy.backend.utils.JsonUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -26,5 +28,18 @@ public class TestJsonUtil {
          System.out.println(json);
          List<NutrientsDetail> details = JsonUtil.convertJsonToList(json, new TypeReference<List<NutrientsDetail>>() {});
          System.out.println(details);
+    }
+
+    @Test
+    public void testJsonUtil2() {
+
+
+
+//        Timestamp start = Timestamp.valueOf(now +" 00:00:00");
+//        Timestamp end = Timestamp.valueOf(now +" 23:59:59");
+
+//        System.out.println(now);
+//        System.out.println(start);
+//        System.out.println(end);
     }
 }

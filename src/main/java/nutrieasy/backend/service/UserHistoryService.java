@@ -11,8 +11,10 @@ import nutrieasy.backend.repository.UserRepository;
 import nutrieasy.backend.utils.JsonUtil;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -31,7 +33,7 @@ public class UserHistoryService {
         this.userRepository = userRepository;
     }
 
-    public UserHistoryResponseVo getUserHistory(String uid, String date) {
+    public UserHistoryResponseVo getUserHistory(String uid, String date) throws ParseException {
         User user = userRepository.findByUid(uid);
         if (user == null) {
             return new UserHistoryResponseVo(false, "User not found", null);
@@ -41,9 +43,9 @@ public class UserHistoryService {
         if (date == null || date.isEmpty()) {
             userHistory = userHistoryRepository.findAllByUser(user);
         } else {
-            Timestamp t1 = Timestamp.valueOf(date+" 00:00:00");
-            Timestamp t2 = Timestamp.valueOf(date+" 23:59:59");
-            userHistory = userHistoryRepository.findAllByUserAndCreatedAtBetween(user, t1, t2);
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+            Date d = formatter.parse(date);
+            userHistory = userHistoryRepository.findAllByUserAndDate(user, d);
         }
 
         if (userHistory.isEmpty()) {
