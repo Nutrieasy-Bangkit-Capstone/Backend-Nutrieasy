@@ -37,7 +37,10 @@ public class NutrieasyController {
     }
 
     @GetMapping("/intake")
-    public ResponseEntity<IntakeResponseVo> getScanHistory(@RequestParam(value = "uid") String uid) throws ParseException {
-        return ResponseEntity.ok(nutrieasyService.calculateIntake(uid));
+    public ResponseEntity<IntakeResponseVo> getScanHistory(
+            @RequestParam(value = "uid") String uid,
+            @RequestParam(value = "date", required = false) String date
+            ) throws ParseException {
+        return ResponseEntity.ok(nutrieasyService.calculateIntake(uid, date));
     }
 }
