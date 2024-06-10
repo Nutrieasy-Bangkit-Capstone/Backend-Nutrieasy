@@ -13,9 +13,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdateUserRequestVo {
-    private String email;
+    private String uid;
     private String fullName;
-    private String password;
     private String gender;
     private String dateOfBirth;
     private Integer height;

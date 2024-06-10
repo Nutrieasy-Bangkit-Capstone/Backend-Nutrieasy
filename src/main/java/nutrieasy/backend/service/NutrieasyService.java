@@ -170,7 +170,7 @@ public class NutrieasyService {
         log.info("Date : " + d.toString());
 
         List<UserHistory> userHistoryList = userHistoryRepository.findAllByUserAndDate(user, d);
-        System.out.println("Size : " + userHistoryList.size());
+        log.info("User History List : " + JsonUtil.convertObjectToJson(userHistoryList));
 
         List<FoodDetails> foodDetailsList = new ArrayList<>();
         userHistoryList.forEach(userHistory -> {
