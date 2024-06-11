@@ -12,6 +12,8 @@ import nutrieasy.backend.model.nutritionix.NutritionixRequestVo;
 import nutrieasy.backend.model.nutritionix.response.NutritionixResponseVo;
 import nutrieasy.backend.model.vo.IntakeResponseVo;
 import nutrieasy.backend.model.vo.ScanResponseVo;
+import nutrieasy.backend.model.vo.TrackHistoryResponseVo;
+import nutrieasy.backend.model.vo.TrackScanRequestVo;
 import nutrieasy.backend.repository.FoodRepository;
 import nutrieasy.backend.repository.NutrientsRepository;
 import nutrieasy.backend.repository.UserHistoryRepository;
@@ -101,14 +103,12 @@ public class NutrieasyService {
             }));
         }
 
-        User user = userRepository.findByUid(uid);
-        saveScanHistory(food, user, uploadedImageUrl);
 
 
         foodDetails.setImageUrl(uploadedImageUrl);
 
         scanResponseVo.setSuccess(true);
-        scanResponseVo.setMessage("Food details saved successfully");
+        scanResponseVo.setMessage("Scan successful");
         scanResponseVo.setData(foodDetails);
 
         log.info("Scan Response : " + JsonUtil.convertObjectToJson(scanResponseVo));
@@ -144,15 +144,7 @@ public class NutrieasyService {
     }
 
 
-    private void saveScanHistory(Food food, User user, String img) {
-        UserHistory userHistory = new UserHistory();
-        userHistory.setUser(user);
-        userHistory.setFood(food);
-        userHistory.setImageUrl(img);
-        userHistory.setCreatedAt(Timestamp.from(Instant.now()));
 
-        userHistoryRepository.save(userHistory);
-    }
 
     public IntakeResponseVo calculateIntake(String uid, String date) throws ParseException {
         User user = userRepository.findByUid(uid);
@@ -170,17 +162,24 @@ public class NutrieasyService {
         log.info("Date : " + d.toString());
 
         List<UserHistory> userHistoryList = userHistoryRepository.findAllByUserAndDate(user, d);
-        log.info("User History List : " + JsonUtil.convertObjectToJson(userHistoryList));
+
+        log.info("User History List = " + userHistoryList.size() + "\n" + JsonUtil.convertObjectToJson(userHistoryList));
 
         List<FoodDetails> foodDetailsList = new ArrayList<>();
         userHistoryList.forEach(userHistory -> {
             FoodDetails foodDetails = new FoodDetails();
-            foodDetails.setNutrientsDetailList(
-                    JsonUtil.convertJsonToList(userHistory.getFood().getNutrientsJson(),
-                            new TypeReference<List<NutrientsDetail>>() {
-                            }));
-            foodDetailsList.add(foodDetails);
+            log.info("User History : " + userHistory.toString());
+            for (int i = 0; i < userHistory.getQuantity(); i++) {
+                foodDetails.setNutrientsDetailList(
+                        JsonUtil.convertJsonToList(userHistory.getFood().getNutrientsJson(),
+                                new TypeReference<List<NutrientsDetail>>() {
+                                }));
+                foodDetailsList.add(foodDetails);
+            }
+
         });
+
+        log.info("Food Details List : " + foodDetailsList.size() + "\n" + JsonUtil.convertObjectToJson(foodDetailsList));
 
         List<NutrientsDetail> nutrientsDetailList = new ArrayList<>();
         foodDetailsList.forEach(foodDetails -> nutrientsDetailList.addAll(foodDetails.getNutrientsDetailList()));
@@ -361,5 +360,29 @@ public class NutrieasyService {
         log.info("Intake Response : " + JsonUtil.convertObjectToJson(intakeResponseVo));
 
         return intakeResponseVo;
+    }
+
+    public TrackHistoryResponseVo trackScan(TrackScanRequestVo trackScanRequestVo) {
+        User user = userRepository.findByUid(trackScanRequestVo.getUid());
+        Food food = foodRepository.findByName(trackScanRequestVo.getFoodName());
+
+        log.info("User : " + user);
+        log.info("Food : " + food);
+        if (user == null || food == null) {
+            log.error("User or Food not found");
+            return new TrackHistoryResponseVo(false, "User or Food not found");
+        }
+
+        UserHistory userHistory = new UserHistory();
+        userHistory.setUser(user);
+        userHistory.setFood(food);
+        userHistory.setImageUrl(trackScanRequestVo.getImageUrl());
+        userHistory.setQuantity(trackScanRequestVo.getQuantity());
+        userHistory.setCreatedAt(Timestamp.from(Instant.now()));
+
+        userHistoryRepository.save(userHistory);
+
+        return new TrackHistoryResponseVo(true, "Scan tracked successfully");
+
     }
 }

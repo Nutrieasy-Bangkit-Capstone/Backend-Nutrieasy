@@ -1,14 +1,9 @@
 package nutrieasy.backend.controller.scan;
 
-import nutrieasy.backend.model.vo.IntakeResponseVo;
-import nutrieasy.backend.model.vo.ScanHistoryResponseVo;
-import nutrieasy.backend.model.vo.ScanResponseVo;
+import nutrieasy.backend.model.vo.*;
 import nutrieasy.backend.service.NutrieasyService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.text.ParseException;
@@ -42,5 +37,10 @@ public class NutrieasyController {
             @RequestParam(value = "date", required = false) String date
             ) throws ParseException {
         return ResponseEntity.ok(nutrieasyService.calculateIntake(uid, date));
+    }
+
+    @PostMapping("/scan/track")
+    public ResponseEntity<TrackHistoryResponseVo> trackScan(@RequestBody TrackScanRequestVo trackScanRequestVo) {
+        return ResponseEntity.ok(nutrieasyService.trackScan(trackScanRequestVo));
     }
 }
