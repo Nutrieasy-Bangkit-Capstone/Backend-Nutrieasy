@@ -8,6 +8,7 @@ import nutrieasy.backend.entity.User;
 import nutrieasy.backend.entity.UserHistory;
 import nutrieasy.backend.model.FoodDetails;
 import nutrieasy.backend.model.NutrientsDetail;
+import nutrieasy.backend.model.ScanResult;
 import nutrieasy.backend.model.nutritionix.NutritionixRequestVo;
 import nutrieasy.backend.model.nutritionix.response.NutritionixResponseVo;
 import nutrieasy.backend.model.vo.IntakeResponseVo;
@@ -20,9 +21,20 @@ import nutrieasy.backend.repository.UserHistoryRepository;
 import nutrieasy.backend.repository.UserRepository;
 import nutrieasy.backend.utils.ConstantNutrient;
 import nutrieasy.backend.utils.JsonUtil;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.ParseException;
@@ -50,84 +62,120 @@ public class NutrieasyService {
     private final UserRepository userRepository;
     private final GoogleCloudStorageService googleCloudStorageService;
     private final NutrientsRepository nutrientsRepository;
+    private final RestTemplate restTemplate;
 
-    public NutrieasyService(FoodRepository foodRepository, NutritionixService nutritionixService, UserHistoryRepository userHistoryRepository, UserRepository userRepository, GoogleCloudStorageService googleCloudStorageService, NutrientsRepository nutrientsRepository) {
+    public NutrieasyService(FoodRepository foodRepository, NutritionixService nutritionixService, UserHistoryRepository userHistoryRepository, UserRepository userRepository, GoogleCloudStorageService googleCloudStorageService, NutrientsRepository nutrientsRepository, RestTemplate restTemplate) {
         this.foodRepository = foodRepository;
         this.nutritionixService = nutritionixService;
         this.userHistoryRepository = userHistoryRepository;
         this.userRepository = userRepository;
         this.googleCloudStorageService = googleCloudStorageService;
         this.nutrientsRepository = nutrientsRepository;
+        this.restTemplate = restTemplate;
     }
+
+    @Value("${ml-model-url}")
+    private String urlModel;
 
     public ScanResponseVo scan(String uid, MultipartFile img) {
         ScanResponseVo scanResponseVo = new ScanResponseVo();
         FoodDetails foodDetails = new FoodDetails();
-        String scanModelResult = "orange";
+        String scanModelResult = scanModel(img).getResult();
         String uploadedImageUrl = null;
 
         try {
             uploadedImageUrl = googleCloudStorageService.uploadFile(img, uid);
-        } catch (IOException e) {
+
+
+            Food food = foodRepository.findByName(scanModelResult);
+
+            if (food == null) {
+                NutritionixRequestVo nutritionixRequestVo = new NutritionixRequestVo(scanModelResult);
+                NutritionixResponseVo nutritionixResponseVo = nutritionixService.getNutritionixData(nutritionixRequestVo);
+                log.info("Nutritionix Response : " + JsonUtil.convertObjectToJson(nutritionixResponseVo));
+
+                if (nutritionixResponseVo == null) {
+                    return new ScanResponseVo(false, "Nutritionix API error", null);
+                } else {
+                    foodDetails = convertNutritionixResponse(nutritionixResponseVo);
+                    food = new Food();
+                    food.setName(scanModelResult);
+                    food.setServingWeightGrams(foodDetails.getServingWeightGrams());
+                    food.setServingQty(foodDetails.getServingQty());
+                    food.setServingUnit(foodDetails.getServingUnit());
+                    food.setCreatedAt(Timestamp.from(Instant.now()));
+                    food.setNutrientsJson(JsonUtil.convertListToJson(foodDetails.getNutrientsDetailList()));
+
+                    foodRepository.save(food);
+                }
+
+            } else {
+                foodDetails.setFoodName(food.getName());
+                foodDetails.setServingWeightGrams(food.getServingWeightGrams());
+                foodDetails.setServingQty(food.getServingQty());
+                foodDetails.setServingUnit(food.getServingUnit());
+                foodDetails.setNutrientsDetailList(JsonUtil.convertJsonToList(food.getNutrientsJson(), new TypeReference<List<NutrientsDetail>>() {
+                }));
+            }
+
+
+            foodDetails.setImageUrl(uploadedImageUrl);
+
+            scanResponseVo.setSuccess(true);
+            scanResponseVo.setMessage("Scan successful");
+            scanResponseVo.setData(foodDetails);
+
+            log.info("Scan Response : " + JsonUtil.convertObjectToJson(scanResponseVo));
+        } catch (Exception e) {
             e.printStackTrace();
             return new ScanResponseVo(false, "Error uploading image", null);
         }
+        return scanResponseVo;
+    }
 
-        Food food = foodRepository.findByName(scanModelResult);
+    private ScanResult scanModel(MultipartFile img) {
+        ScanResult scanResult = new ScanResult();
+        try {
 
-        if (food == null) {
-            NutritionixRequestVo nutritionixRequestVo = new NutritionixRequestVo(scanModelResult);
-            NutritionixResponseVo nutritionixResponseVo = nutritionixService.getNutritionixData(nutritionixRequestVo);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-            if (nutritionixResponseVo == null) {
-                return new ScanResponseVo(false, "Nutritionix API error", null);
-            } else {
-                foodDetails = convertNutritionixResponse(nutritionixResponseVo);
-                food = new Food();
-                food.setName(scanModelResult);
-                food.setServingWeightGrams(foodDetails.getServingWeightGrams());
-                food.setServingQty(foodDetails.getServingQty());
-                food.setServingUnit(foodDetails.getServingUnit());
-                food.setCreatedAt(Timestamp.from(Instant.now()));
-                food.setNutrientsJson(JsonUtil.convertListToJson(foodDetails.getNutrientsDetailList()));
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", convertToFileResource(img));
 
-                foodRepository.save(food);
-            }
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-        } else {
-            foodDetails.setFoodName(food.getName());
-            foodDetails.setServingWeightGrams(food.getServingWeightGrams());
-            foodDetails.setServingQty(food.getServingQty());
-            foodDetails.setServingUnit(food.getServingUnit());
-            foodDetails.setNutrientsDetailList(JsonUtil.convertJsonToList(food.getNutrientsJson(), new TypeReference<List<NutrientsDetail>>() {
-            }));
+            scanResult = restTemplate.postForObject(urlModel, requestEntity, ScanResult.class);
+            log.info("Scan Result : " + JsonUtil.convertObjectToJson(scanResult));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
+        return scanResult;
+    }
 
-
-        foodDetails.setImageUrl(uploadedImageUrl);
-
-        scanResponseVo.setSuccess(true);
-        scanResponseVo.setMessage("Scan successful");
-        scanResponseVo.setData(foodDetails);
-
-        log.info("Scan Response : " + JsonUtil.convertObjectToJson(scanResponseVo));
-
-        return scanResponseVo;
+    private Resource convertToFileResource(MultipartFile file) throws IOException {
+        return new ByteArrayResource(file.getBytes()) {
+            @Override
+            public String getFilename() {
+                return file.getOriginalFilename();
+            }
+        };
     }
 
     private FoodDetails convertNutritionixResponse(NutritionixResponseVo nutritionixResponseVo) {
         FoodDetails foodDetails = new FoodDetails();
         List<NutrientsDetail> nutrientsDetailList = new ArrayList<>();
-        nutritionixResponseVo.getFoods().forEach(food -> {
+        log.info("Nutritionix Convert : " + JsonUtil.convertObjectToJson(nutritionixResponseVo));
+        for (nutrieasy.backend.model.nutritionix.response.Food food : nutritionixResponseVo.getFoods()) {
             food.getFull_nutrients().forEach(fullNutrient -> {
-                System.out.println("Food : " + food.toString());
-                System.out.println("Full Nutrient : " + fullNutrient.toString());
                 NutrientsDetail nutrientsDetail = nutritionixService.getNutrientAttribute(fullNutrient.getAttr_id());
-                nutrientsDetail.setValue(fullNutrient.getValue());
-                nutrientsDetailList.add(nutrientsDetail);
+                if (nutrientsDetail != null) {
+                    nutrientsDetail.setValue(fullNutrient.getValue());
+                    nutrientsDetailList.add(nutrientsDetail);
+                }
             });
-        });
+        }
 
         List<NutrientsDetail> sortedList = nutrientsDetailList.stream()
                 .filter(n -> n.getValue() != 0.0)
@@ -142,8 +190,6 @@ public class NutrieasyService {
 
         return foodDetails;
     }
-
-
 
 
     public IntakeResponseVo calculateIntake(String uid, String date) throws ParseException {
