@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.Date;
 
 /**
  * Created by Resa S.
@@ -28,8 +29,14 @@ public class UserHistory {
     @Column(name = "image_url")
     private String imageUrl;
 
+
+    @Column(name = "quantity")
+    private int quantity;
+
     @Column(name = "created_at", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private Timestamp createdAt;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
+
 
 }

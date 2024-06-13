@@ -16,28 +16,25 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserRepository userRepository;
 
-    private final PasswordEncoder passwordEncoder;
-
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     public UserResponseVo updateUser(UpdateUserRequestVo updateUserRequestVo) {
 
-        User userFromDb = userRepository.findByEmail(updateUserRequestVo.getEmail());
+        User userFromDb = userRepository.findByUid(updateUserRequestVo.getUid());
         if (userFromDb == null) {
             return new UserResponseVo(false, "User not found", null);
         }
 
         userFromDb.setFullName(updateUserRequestVo.getFullName());
-        userFromDb.setPassword(passwordEncoder.encode(updateUserRequestVo.getPassword()));
         userFromDb.setGender(updateUserRequestVo.getGender());
         userFromDb.setDateOfBirth(updateUserRequestVo.getDateOfBirth());
         userFromDb.setWeight(updateUserRequestVo.getWeight());
         userFromDb.setHeight(updateUserRequestVo.getHeight());
 
         userRepository.save(userFromDb);
+        userFromDb.setPassword("");
         return new UserResponseVo(true, "User updated successfully", userFromDb);
     }
 

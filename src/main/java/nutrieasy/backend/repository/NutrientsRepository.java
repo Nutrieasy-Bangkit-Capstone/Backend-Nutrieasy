@@ -10,4 +10,6 @@ import java.util.List;
 public interface NutrientsRepository extends JpaRepository<Nutrients, Integer>{
     @Override
     List<Nutrients> findAllById(Iterable<Integer> integers);
+
+    Nutrients findByAttrID(int attrID);
 }
