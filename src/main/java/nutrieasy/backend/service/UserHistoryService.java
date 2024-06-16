@@ -1,6 +1,7 @@
 package nutrieasy.backend.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import lombok.extern.slf4j.Slf4j;
 import nutrieasy.backend.entity.User;
 import nutrieasy.backend.entity.UserHistory;
 import nutrieasy.backend.model.HistoryModel;
@@ -23,6 +24,7 @@ import java.util.List;
  * Created in IntelliJ IDEA.
  */
 @Service
+@Slf4j
 public class UserHistoryService {
 
     private final UserHistoryRepository userHistoryRepository;
@@ -40,13 +42,16 @@ public class UserHistoryService {
         }
         List<UserHistory> userHistory = null;
 
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         if (date == null || date.isEmpty()) {
-            userHistory = userHistoryRepository.findAllByUser(user);
-        } else {
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-            Date d = formatter.parse(date);
-            userHistory = userHistoryRepository.findAllByUserAndDate(user, d);
+            date = formatter.format(new Date());
         }
+
+        log.info("Getting user history for user : " + uid + " and date : " + date);
+
+        Date d = formatter.parse(date);
+        userHistory = userHistoryRepository.findAllByUserAndDate(user, d);
+
 
         if (userHistory.isEmpty()) {
             return new UserHistoryResponseVo(true, "User have no history", null);
@@ -69,6 +74,9 @@ public class UserHistoryService {
             historyModelList.add(historyModel);
         });
 
-        return new UserHistoryResponseVo(true, "History found", historyModelList);
+        UserHistoryResponseVo resp = new UserHistoryResponseVo(true, "History found", historyModelList);
+        log.info("User history response : " + JsonUtil.convertObjectToJson(resp));
+
+        return resp;
     }
 }
