@@ -19,4 +19,5 @@ public class UpdateUserRequestVo {
     private String dateOfBirth;
     private Integer height;
     private Integer weight;
+    private String activityLevel;
 }

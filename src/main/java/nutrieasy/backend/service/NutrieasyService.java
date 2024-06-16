@@ -8,6 +8,7 @@ import nutrieasy.backend.entity.User;
 import nutrieasy.backend.entity.UserHistory;
 import nutrieasy.backend.model.FoodDetails;
 import nutrieasy.backend.model.NutrientsDetail;
+import nutrieasy.backend.model.NutrientsIntakeDetail;
 import nutrieasy.backend.model.ScanResult;
 import nutrieasy.backend.model.nutritionix.NutritionixRequestVo;
 import nutrieasy.backend.model.nutritionix.response.NutritionixResponseVo;
@@ -19,6 +20,7 @@ import nutrieasy.backend.repository.FoodRepository;
 import nutrieasy.backend.repository.NutrientsRepository;
 import nutrieasy.backend.repository.UserHistoryRepository;
 import nutrieasy.backend.repository.UserRepository;
+import nutrieasy.backend.utils.BodyCountUtils;
 import nutrieasy.backend.utils.ConstantNutrient;
 import nutrieasy.backend.utils.JsonUtil;
 import org.springframework.beans.factory.annotation.Value;
@@ -199,6 +201,10 @@ public class NutrieasyService {
             return new IntakeResponseVo(false, "User not found", null);
         }
 
+        if (user.getGender() == null || user.getGender().isEmpty()) {
+            user.setGender("Female");
+        }
+
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         if (date == null || date.isEmpty()) {
@@ -231,21 +237,24 @@ public class NutrieasyService {
         foodDetailsList.forEach(foodDetails -> nutrientsDetailList.addAll(foodDetails.getNutrientsDetailList()));
 
 
-        NutrientsDetail totalVitaminC = new NutrientsDetail(ConstantNutrient.VITAMIN_C, null, 0, null);
-        NutrientsDetail totalVitaminA = new NutrientsDetail(ConstantNutrient.VITAMIN_A, null, 0, null);
-        NutrientsDetail totalVitaminD = new NutrientsDetail(ConstantNutrient.VITAMIN_D, null, 0, null);
-        NutrientsDetail totalVitaminE = new NutrientsDetail(ConstantNutrient.VITAMIN_E, null, 0, null);
-        NutrientsDetail totalVitaminB6 = new NutrientsDetail(ConstantNutrient.VITAMIN_B6, null, 0, null);
-        NutrientsDetail totalVitaminB12 = new NutrientsDetail(ConstantNutrient.VITAMIN_B12, null, 0, null);
-        NutrientsDetail totalCalcium = new NutrientsDetail(ConstantNutrient.CALCIUM, null, 0, null);
-        NutrientsDetail totalIron = new NutrientsDetail(ConstantNutrient.IRON, null, 0, null);
-        NutrientsDetail totalMagnesium = new NutrientsDetail(ConstantNutrient.MAGNESIUM, null, 0, null);
-        NutrientsDetail totalPotassium = new NutrientsDetail(ConstantNutrient.POTASSIUM, null, 0, null);
-        NutrientsDetail totalSodium = new NutrientsDetail(ConstantNutrient.SODIUM, null, 0, null);
-        NutrientsDetail totalZinc = new NutrientsDetail(ConstantNutrient.ZINC, null, 0, null);
-        NutrientsDetail totalFiber = new NutrientsDetail(ConstantNutrient.FIBER, null, 0, null);
+        NutrientsIntakeDetail totalVitaminC = new NutrientsIntakeDetail(ConstantNutrient.VITAMIN_C, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalVitaminA = new NutrientsIntakeDetail(ConstantNutrient.VITAMIN_A, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalVitaminD = new NutrientsIntakeDetail(ConstantNutrient.VITAMIN_D, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalVitaminE = new NutrientsIntakeDetail(ConstantNutrient.VITAMIN_E, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalVitaminB6 = new NutrientsIntakeDetail(ConstantNutrient.VITAMIN_B6, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalVitaminB12 = new NutrientsIntakeDetail(ConstantNutrient.VITAMIN_B12, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalCalcium = new NutrientsIntakeDetail(ConstantNutrient.CALCIUM, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalIron = new NutrientsIntakeDetail(ConstantNutrient.IRON, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalMagnesium = new NutrientsIntakeDetail(ConstantNutrient.MAGNESIUM, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalPotassium = new NutrientsIntakeDetail(ConstantNutrient.POTASSIUM, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalSodium = new NutrientsIntakeDetail(ConstantNutrient.SODIUM, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalZinc = new NutrientsIntakeDetail(ConstantNutrient.ZINC, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalFiber = new NutrientsIntakeDetail(ConstantNutrient.FIBER, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalEnergy = new NutrientsIntakeDetail(ConstantNutrient.ENERGY, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalProtein = new NutrientsIntakeDetail(ConstantNutrient.PROTEIN, null, 0, null, 0, 0);
+        NutrientsIntakeDetail totalSugar = new NutrientsIntakeDetail(ConstantNutrient.SUGAR, null, 0, null, 0, 0);
 
-        List<NutrientsDetail> totalIntakeList = new ArrayList<>();
+        List<NutrientsIntakeDetail> totalIntakeList = new ArrayList<>();
 
         List<Integer> query = new ArrayList<>();
         query.add(ConstantNutrient.VITAMIN_C);
@@ -261,6 +270,9 @@ public class NutrieasyService {
         query.add(ConstantNutrient.SODIUM);
         query.add(ConstantNutrient.ZINC);
         query.add(ConstantNutrient.FIBER);
+        query.add(ConstantNutrient.ENERGY);
+        query.add(ConstantNutrient.PROTEIN);
+        query.add(ConstantNutrient.SUGAR);
 
         List<Nutrients> listOfNutrients = nutrientsRepository.findAllById(query);
 
@@ -270,69 +282,140 @@ public class NutrieasyService {
                     totalVitaminC.setAttrId(nutrient.getAttrID());
                     totalVitaminC.setName(nutrient.getName());
                     totalVitaminC.setUnit(nutrient.getUnit());
+
+                    totalVitaminC.setMinValue(BodyCountUtils.getVitaminCMin(user.getGender()));
+                    totalVitaminC.setMaxValue(2000);
                     break;
                 case ConstantNutrient.VITAMIN_A:
                     totalVitaminA.setAttrId(nutrient.getAttrID());
                     totalVitaminA.setName(nutrient.getName());
                     totalVitaminA.setUnit(nutrient.getUnit());
+
+                    totalVitaminA.setMinValue(BodyCountUtils.getVitaminAMin(user.getGender()));
+                    totalVitaminA.setMaxValue(3000);
                     break;
                 case ConstantNutrient.VITAMIN_D:
                     totalVitaminD.setAttrId(nutrient.getAttrID());
                     totalVitaminD.setName(nutrient.getName());
                     totalVitaminD.setUnit(nutrient.getUnit());
+
+                    totalVitaminD.setMinValue(15);
+                    totalVitaminD.setMaxValue(100);
                     break;
                 case ConstantNutrient.VITAMIN_E:
                     totalVitaminE.setAttrId(nutrient.getAttrID());
                     totalVitaminE.setName(nutrient.getName());
                     totalVitaminE.setUnit(nutrient.getUnit());
+
+                    totalVitaminE.setMinValue(15);
+                    totalVitaminE.setMaxValue(1000);
                     break;
                 case ConstantNutrient.VITAMIN_B6:
                     totalVitaminB6.setAttrId(nutrient.getAttrID());
                     totalVitaminB6.setName(nutrient.getName());
                     totalVitaminB6.setUnit(nutrient.getUnit());
+
+                    totalVitaminB6.setMinValue(1.3);
+                    totalVitaminB6.setMaxValue(100);
                     break;
                 case ConstantNutrient.VITAMIN_B12:
                     totalVitaminB12.setAttrId(nutrient.getAttrID());
                     totalVitaminB12.setName(nutrient.getName());
                     totalVitaminB12.setUnit(nutrient.getUnit());
+
+                    totalVitaminB12.setMinValue(2.4);
+                    totalVitaminB12.setMaxValue(100);
                     break;
                 case ConstantNutrient.CALCIUM:
                     totalCalcium.setAttrId(nutrient.getAttrID());
                     totalCalcium.setName(nutrient.getName());
                     totalCalcium.setUnit(nutrient.getUnit());
+
+                    totalCalcium.setMinValue(1000);
+                    totalCalcium.setMaxValue(2500);
                     break;
                 case ConstantNutrient.IRON:
                     totalIron.setAttrId(nutrient.getAttrID());
                     totalIron.setName(nutrient.getName());
                     totalIron.setUnit(nutrient.getUnit());
+
+                    totalIron.setMinValue(BodyCountUtils.getIronMin(user.getGender()));
+                    totalIron.setMaxValue(45);
                     break;
                 case ConstantNutrient.MAGNESIUM:
                     totalMagnesium.setAttrId(nutrient.getAttrID());
                     totalMagnesium.setName(nutrient.getName());
                     totalMagnesium.setUnit(nutrient.getUnit());
+
+                    totalMagnesium.setMinValue(BodyCountUtils.getMagnesiumMin(user.getGender()));
+                    totalMagnesium.setMaxValue(500);
                     break;
                 case ConstantNutrient.POTASSIUM:
                     totalPotassium.setAttrId(nutrient.getAttrID());
                     totalPotassium.setName(nutrient.getName());
                     totalPotassium.setUnit(nutrient.getUnit());
+
+                    totalPotassium.setMinValue(3500);
+                    totalPotassium.setMaxValue(4700);
                     break;
                 case ConstantNutrient.SODIUM:
                     totalSodium.setAttrId(nutrient.getAttrID());
                     totalSodium.setName(nutrient.getName());
                     totalSodium.setUnit(nutrient.getUnit());
+
+                    totalSodium.setMinValue(1500);
+                    totalSodium.setMaxValue(2300);
                     break;
                 case ConstantNutrient.ZINC:
                     totalZinc.setAttrId(nutrient.getAttrID());
                     totalZinc.setName(nutrient.getName());
                     totalZinc.setUnit(nutrient.getUnit());
+
+                    totalZinc.setMinValue(BodyCountUtils.getZincMin(user.getGender()));
+                    totalZinc.setMaxValue(40);
+                    break;
+                case ConstantNutrient.ENERGY:
+                    totalEnergy.setAttrId(nutrient.getAttrID());
+                    totalEnergy.setName(nutrient.getName());
+                    totalEnergy.setUnit(nutrient.getUnit());
+
+                    totalEnergy.setMinValue(
+                            BodyCountUtils.getCaloriesDailyIntake(
+                                    user.getActivityLevel(),
+                                    BodyCountUtils.getBmr(
+                                            user.getGender(),
+                                            user.getWeight(),
+                                            user.getHeight(),
+                                            BodyCountUtils.getAgeByBirthDate(user.getDateOfBirth()))));
+                    totalEnergy.setMaxValue(totalEnergy.getMinValue()+200);
+                    break;
+                case ConstantNutrient.SUGAR:
+                    totalSugar.setAttrId(nutrient.getAttrID());
+                    totalSugar.setName(nutrient.getName());
+                    totalSugar.setUnit(nutrient.getUnit());
+
+                    totalSugar.setMinValue(0);
+                    totalSugar.setMaxValue(30);
                     break;
                 case ConstantNutrient.FIBER:
                     totalFiber.setAttrId(nutrient.getAttrID());
                     totalFiber.setName(nutrient.getName());
                     totalFiber.setUnit(nutrient.getUnit());
+
+                    totalFiber.setMinValue(25);
+                    totalFiber.setMaxValue(50);
+                    break;
+                case ConstantNutrient.PROTEIN:
+                    totalProtein.setAttrId(nutrient.getAttrID());
+                    totalProtein.setName(nutrient.getName());
+                    totalProtein.setUnit(nutrient.getUnit());
+
+                    totalProtein.setMinValue(BodyCountUtils.getProteinMin(user.getGender()));
+                    totalProtein.setMaxValue(200);
                     break;
                 default:
                     break;
+
             }
         });
 
@@ -378,6 +461,15 @@ public class NutrieasyService {
                 case ConstantNutrient.FIBER:
                     totalFiber.setValue(totalFiber.getValue() + nd.getValue());
                     break;
+                case ConstantNutrient.ENERGY:
+                    totalEnergy.setValue(totalEnergy.getValue() + nd.getValue());
+                    break;
+                case ConstantNutrient.SUGAR:
+                    totalSugar.setValue(totalSugar.getValue() + nd.getValue());
+                    break;
+                case ConstantNutrient.PROTEIN:
+                    totalProtein.setValue(totalProtein.getValue() + nd.getValue());
+                    break;
                 default:
                     break;
             }
@@ -396,6 +488,9 @@ public class NutrieasyService {
         totalIntakeList.add(totalSodium);
         totalIntakeList.add(totalZinc);
         totalIntakeList.add(totalFiber);
+        totalIntakeList.add(totalEnergy);
+        totalIntakeList.add(totalProtein);
+        totalIntakeList.add(totalSugar);
 
 
         IntakeResponseVo intakeResponseVo = new IntakeResponseVo();
@@ -431,4 +526,5 @@ public class NutrieasyService {
         return new TrackHistoryResponseVo(true, "Scan tracked successfully");
 
     }
+
 }

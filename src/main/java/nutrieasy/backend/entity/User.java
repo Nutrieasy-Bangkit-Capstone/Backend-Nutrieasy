@@ -41,4 +41,7 @@ public class User {
 
     @Column(name = "role")
     private String role;
+
+    @Column(name = "activity_level")
+    private String activityLevel;
 }

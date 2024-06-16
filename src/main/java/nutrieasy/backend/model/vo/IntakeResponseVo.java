@@ -3,7 +3,7 @@ package nutrieasy.backend.model.vo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nutrieasy.backend.model.NutrientsDetail;
+import nutrieasy.backend.model.NutrientsIntakeDetail;
 
 import java.util.List;
 
@@ -18,5 +18,5 @@ import java.util.List;
 public class IntakeResponseVo {
     private Boolean success;
     private String message;
-    private List<NutrientsDetail> totalIntakeList;
+    private List<NutrientsIntakeDetail> totalIntakeList;
 }

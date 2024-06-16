@@ -32,6 +32,7 @@ public class UserService {
         userFromDb.setDateOfBirth(updateUserRequestVo.getDateOfBirth());
         userFromDb.setWeight(updateUserRequestVo.getWeight());
         userFromDb.setHeight(updateUserRequestVo.getHeight());
+        userFromDb.setActivityLevel(updateUserRequestVo.getActivityLevel());
 
         userRepository.save(userFromDb);
         userFromDb.setPassword("");

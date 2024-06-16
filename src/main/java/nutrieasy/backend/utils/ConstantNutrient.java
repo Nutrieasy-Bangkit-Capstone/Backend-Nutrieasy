@@ -24,5 +24,7 @@ public class ConstantNutrient {
     public static final int SUGAR = 269;
     public static final int FAT = 204;
     public static final int CARBOHYDRATE = 205;
+    public static final int ENERGY = 208;
+    public static final int CHOLESTEROL = 601;
 
 }
