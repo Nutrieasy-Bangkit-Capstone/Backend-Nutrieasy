@@ -54,9 +54,45 @@ public class UserHistoryService {
 
 
         if (userHistory.isEmpty()) {
-            return new UserHistoryResponseVo(true, "User have no history", null);
+            return new UserHistoryResponseVo(true, "User have no history", new ArrayList<>());
         }
 
+        List<HistoryModel> historyModelList = convertUserHistory(userHistory);
+
+        UserHistoryResponseVo resp = new UserHistoryResponseVo(true, "History found", historyModelList);
+        log.info("User history response : " + JsonUtil.convertObjectToJson(resp));
+
+        return resp;
+    }
+
+
+    public UserHistoryResponseVo getAllUserHistory(String uid) throws ParseException {
+        User user = userRepository.findByUid(uid);
+        if (user == null) {
+            return new UserHistoryResponseVo(false, "User not found", new ArrayList<>());
+        }
+        List<UserHistory> userHistory = null;
+
+
+        log.info("Getting all user history for user : " + uid);
+
+        userHistory = userHistoryRepository.findAllByUserOrderByCreatedAtDesc(user);
+
+
+        if (userHistory.isEmpty()) {
+            return new UserHistoryResponseVo(true, "User have no history", new ArrayList<>());
+        }
+
+        List<HistoryModel> historyModelList = convertUserHistory(userHistory);
+
+
+        UserHistoryResponseVo resp = new UserHistoryResponseVo(true, "History found", historyModelList);
+        log.info("User history response : " + JsonUtil.convertObjectToJson(resp));
+
+        return resp;
+    }
+
+    private List<HistoryModel> convertUserHistory(List<UserHistory> userHistory) {
         List<HistoryModel> historyModelList = new ArrayList<>();
         userHistory.forEach(useh -> {
 
@@ -73,10 +109,6 @@ public class UserHistoryService {
             historyModel.setCreatedAt(useh.getCreatedAt().toString());
             historyModelList.add(historyModel);
         });
-
-        UserHistoryResponseVo resp = new UserHistoryResponseVo(true, "History found", historyModelList);
-        log.info("User history response : " + JsonUtil.convertObjectToJson(resp));
-
-        return resp;
+        return historyModelList;
     }
 }

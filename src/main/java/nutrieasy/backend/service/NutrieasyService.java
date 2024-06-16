@@ -82,7 +82,7 @@ public class NutrieasyService {
     public ScanResponseVo scan(String uid, MultipartFile img) {
         ScanResponseVo scanResponseVo = new ScanResponseVo();
         FoodDetails foodDetails = new FoodDetails();
-        String scanModelResult = scanModel(img).getResult();
+        String scanModelResult = scanModel(img).getResult().toLowerCase();
         String uploadedImageUrl = null;
 
         try {

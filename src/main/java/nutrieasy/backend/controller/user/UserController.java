@@ -47,5 +47,11 @@ public class UserController {
         UserHistoryResponseVo userHistoryResponseVo = userHistoryService.getUserHistory(uid, date);
         return ResponseEntity.ok(userHistoryResponseVo);
     }
+    @GetMapping("/user/history/all")
+    public ResponseEntity<UserHistoryResponseVo> getAllUserHistory(
+            @RequestParam(value = "uid") String uid) throws ParseException {
+        UserHistoryResponseVo userHistoryResponseVo = userHistoryService.getAllUserHistory(uid);
+        return ResponseEntity.ok(userHistoryResponseVo);
+    }
 
 }

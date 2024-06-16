@@ -11,11 +11,11 @@ import java.util.List;
 
 public interface UserHistoryRepository extends JpaRepository<UserHistory, Long> {
 
-    List<UserHistory> findAllByUser(User user);
+    List<UserHistory> findAllByUserOrderByCreatedAtDesc(User user);
 
     List<UserHistory> findAllByUserAndCreatedAtBetween(User user, Timestamp date, Timestamp date2);
 
 
-    @Query("SELECT uh FROM UserHistory uh WHERE uh.user = ?1 AND DATE(uh.createdAt) = DATE(?2)")
+    @Query("SELECT uh FROM UserHistory uh WHERE uh.user = ?1 AND DATE(uh.createdAt) = DATE(?2) order by uh.createdAt desc")
     List<UserHistory> findAllByUserAndDate(User user, Date date);
 }
