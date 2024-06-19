@@ -16,7 +16,7 @@ import java.util.Map;
 public class Food {
     private String food_name;
     private String brand_name;
-    private int serving_qty;
+    private double serving_qty;
     private String serving_unit;
     private int serving_weight_grams;
     private double nf_calories;

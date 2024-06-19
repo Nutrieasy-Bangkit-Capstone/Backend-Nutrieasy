@@ -25,7 +25,6 @@ import nutrieasy.backend.utils.ConstantNutrient;
 import nutrieasy.backend.utils.JsonUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -36,7 +35,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.ParseException;
@@ -84,6 +82,10 @@ public class NutrieasyService {
         FoodDetails foodDetails = new FoodDetails();
         String scanModelResult = scanModel(img).getResult().toLowerCase();
         String uploadedImageUrl = null;
+
+        if (scanModelResult == null || scanModelResult.toLowerCase().equalsIgnoreCase("unknown") || scanModelResult.isEmpty()) {
+            return new ScanResponseVo(false, "Model could not recognize the image", null);
+        }
 
         try {
             uploadedImageUrl = googleCloudStorageService.uploadFile(img, uid);
@@ -174,6 +176,9 @@ public class NutrieasyService {
                 NutrientsDetail nutrientsDetail = nutritionixService.getNutrientAttribute(fullNutrient.getAttr_id());
                 if (nutrientsDetail != null) {
                     nutrientsDetail.setValue(fullNutrient.getValue());
+                    if (food.getServing_qty() == 0.5) {
+                        nutrientsDetail.setValue(nutrientsDetail.getValue() * 2);
+                    }
                     nutrientsDetailList.add(nutrientsDetail);
                 }
             });
@@ -184,9 +189,11 @@ public class NutrieasyService {
                 .sorted(Comparator.comparingDouble(NutrientsDetail::getValue).reversed())
                 .collect(Collectors.toList());
 
+        int servingQty = nutritionixResponseVo.getFoods().get(0).getServing_qty() == 0.5 ? 1 : (int) nutritionixResponseVo.getFoods().get(0).getServing_qty();
+
         foodDetails.setFoodName(nutritionixResponseVo.getFoods().get(0).getFood_name());
         foodDetails.setServingWeightGrams(nutritionixResponseVo.getFoods().get(0).getServing_weight_grams());
-        foodDetails.setServingQty(nutritionixResponseVo.getFoods().get(0).getServing_qty());
+        foodDetails.setServingQty(servingQty);
         foodDetails.setServingUnit(nutritionixResponseVo.getFoods().get(0).getServing_unit());
         foodDetails.setNutrientsDetailList(sortedList);
 
@@ -387,7 +394,7 @@ public class NutrieasyService {
                                             user.getWeight(),
                                             user.getHeight(),
                                             BodyCountUtils.getAgeByBirthDate(user.getDateOfBirth()))));
-                    totalEnergy.setMaxValue(totalEnergy.getMinValue()+200);
+                    totalEnergy.setMaxValue(totalEnergy.getMinValue() + 200);
                     break;
                 case ConstantNutrient.SUGAR:
                     totalSugar.setAttrId(nutrient.getAttrID());
