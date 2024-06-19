@@ -102,10 +102,28 @@ public class UserHistoryService {
             historyModel.setFoodId(useh.getFood().getId());
             historyModel.setFoodName(useh.getFood().getName());
             historyModel.setImageUrl(useh.getImageUrl());
-            historyModel.setServingQty(useh.getFood().getServingQty());
+            historyModel.setServingQty(useh.getQuantity());
             historyModel.setServingUnit(useh.getFood().getServingUnit());
             historyModel.setServingWeightGrams(useh.getFood().getServingWeightGrams());
-            historyModel.setNutrientsDetailList(JsonUtil.convertJsonToList(useh.getFood().getNutrientsJson(),  new TypeReference<List<NutrientsDetail>>() {}));
+
+            List<NutrientsDetail> listOfNutrientsDetail = JsonUtil.convertJsonToList(useh.getFood().getNutrientsJson(),  new TypeReference<List<NutrientsDetail>>() {});
+            List<NutrientsDetail> finalListOfNutrientsDetail = new ArrayList<>();
+
+            if (useh.getFood().getServingQty() != useh.getQuantity()) {
+                for (NutrientsDetail nd : listOfNutrientsDetail) {
+                    NutrientsDetail newNd = new NutrientsDetail();
+                    newNd.setAttrId(nd.getAttrId());
+                    newNd.setUnit(nd.getUnit());
+                    newNd.setValue(nd.getValue() * useh.getQuantity());
+                    newNd.setName(nd.getName());
+
+                    finalListOfNutrientsDetail.add(newNd);
+                }
+            } else {
+                finalListOfNutrientsDetail = listOfNutrientsDetail;
+            }
+
+            historyModel.setNutrientsDetailList(finalListOfNutrientsDetail);
             historyModel.setCreatedAt(useh.getCreatedAt().toString());
             historyModelList.add(historyModel);
         });
